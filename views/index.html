@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eudemics</title>
+<style>
+@font-face {
+  font-family: "terminus";
+  src: url("/fonts/terminus.ttf");
+}
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/Monocraft.ttf");
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+:root {
+  --bg: #F5F5F0;
+  --primary: #1a6b5a;
+  --bright: #00e5c3;
+  --dark: #0a2e24;
+  --text: #2A2A2A;
+  --text-mid: #5A5A5A;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(26, 107, 90, 0.2);
+  --nav-hover: rgba(0, 229, 195, 0.15);
+  --grid-color: rgba(26, 107, 90, 0.06);
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'terminus', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+.grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridSlide 60s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes gridSlide {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-40px, -40px); }
+}
+#app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  grid-template-rows: 1fr auto;
+  min-height: 100vh;
+  gap: 0;
+}
+#content {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  padding: 40px;
+  overflow-y: auto;
+  height: 100vh;
+  background: rgba(245, 245, 240, 0.75);
+}
+#content .card {
+  padding: 32px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#content .card.fade-out {
+  opacity: 0;
+  transform: translateY(8px);
+}
+#nav {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 40px 16px;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: rgba(245, 245, 240, 0.75);
+}
+.nav-pkg {
+  font-family: 'Monocraft', monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+}
+.nav-pkg:hover {
+  background: var(--nav-hover);
+  border-color: var(--card-border);
+  transform: translateX(-4px);
+  box-shadow: 8px 0 20px rgba(0, 229, 195, 0.1);
+}
+.nav-pkg.active {
+  background: var(--nav-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.nav-sub {
+  font-family: 'terminus', monospace;
+  font-size: 12px;
+  padding: 6px 14px 6px 28px;
+  background: transparent;
+  border: none;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+  display: none;
+}
+.nav-sub.visible {
+  display: block;
+}
+.nav-sub:hover {
+  color: var(--primary);
+  transform: translateX(-2px);
+}
+.nav-sub.active {
+  color: var(--primary);
+  font-weight: bold;
+}
+#graph-panel {
+  float: left;
+  width: 280px;
+  height: 220px;
+  backdrop-filter: blur(10px);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  margin: 0 24px 16px 0;
+  position: relative;
+  z-index: 5;
+}
+#graph-panel canvas {
+  width: 100%;
+  height: 100%;
+}
+#graph-label {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  font-family: 'Monocraft', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  pointer-events: none;
+}
+.content-title {
+  font-family: 'Monocraft', monospace;
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.content-meta {
+  font-size: 12px;
+  color: var(--text-mid);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+.content-body h1 { font-family: 'Monocraft', monospace; font-size: 20px; color: var(--dark); margin: 24px 0 12px; }
+.content-body h2 { font-family: 'Monocraft', monospace; font-size: 16px; color: var(--primary); margin: 20px 0 10px; }
+.content-body h3 { font-family: 'Monocraft', monospace; font-size: 14px; color: var(--text); margin: 16px 0 8px; }
+.content-body p { margin: 0 0 12px; }
+.content-body a { color: var(--primary); text-decoration: none; border-bottom: 1px solid var(--bright); }
+.content-body a:hover { color: var(--bright); }
+.content-body code { background: rgba(26, 107, 90, 0.08); padding: 2px 6px; font-size: 13px; }
+.content-body ul, .content-body ol { margin: 0 0 12px 24px; }
+@media (max-width: 1024px) {
+  #app { grid-template-columns: 1fr; }
+  #nav {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 240px;
+    height: 100vh;
+    background: var(--bg);
+    border-left: 1px solid var(--card-border);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 20;
+  }
+  #nav.open { transform: translateX(0); }
+  #graph-panel { width: 200px; height: 160px; margin: 0 16px 12px 0; }
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div id="app">
+  <div id="content">
+    <div id="graph-panel">
+      <span id="graph-label">relationships</span>
+      <canvas id="graph-canvas"></canvas>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</div>
+<script>
+var state = {
+  manifest: null,
+  currentPath: null,
+  expandedPkg: null
+};
+
+var graphState = {
+  nodes: [],
+  edges: [],
+  hoveredNode: null,
+  canvas: null,
+  ctx: null,
+  width: 0,
+  height: 0,
+  dpr: 1
+};
+
+function navigate(path) {
+  window.location.hash = path ? "#/" + path : "#/";
+}
+
+function getHashPath() {
+  var h = window.location.hash;
+  if (!h || h === "#" || h === "#/") return "";
+  return h.replace(/^#\/?/, "");
+}
+
+function fetchManifest() {
+  return fetch("/api/manifest")
+    .then(function(r) { return r.json(); })
+    .then(function(data) { state.manifest = data; });
+}
+
+function fetchContent(path) {
+  return fetch("/api/content/" + path)
+    .then(function(r) { return r.text(); });
+}
+
+function renderNav() {
+  var nav = document.getElementById("nav");
+  nav.innerHTML = "";
+  if (!state.manifest) return;
+
+  var homeBtn = document.createElement("button");
+  homeBtn.className = "nav-pkg";
+  if (!state.currentPath) homeBtn.className += " active";
+  homeBtn.textContent = "home";
+  homeBtn.onclick = function() { navigate(""); };
+  nav.appendChild(homeBtn);
+
+  state.manifest.packages.forEach(function(pkg) {
+    var pkgBtn = document.createElement("button");
+    pkgBtn.className = "nav-pkg";
+    if (state.currentPath && state.currentPath.indexOf(pkg.path) === 0) {
+      pkgBtn.className += " active";
+    }
+    pkgBtn.textContent = pkg.name;
+    pkgBtn.onclick = function() {
+      if (state.expandedPkg === pkg.path) {
+        navigate(pkg.path);
+      } else {
+        state.expandedPkg = pkg.path;
+        renderNav();
+      }
+    };
+    nav.appendChild(pkgBtn);
+
+    if (pkg.children && pkg.children.length > 0) {
+      pkg.children.forEach(function(child) {
+        var subBtn = document.createElement("button");
+        subBtn.className = "nav-sub";
+        if (state.expandedPkg === pkg.path) {
+          subBtn.className += " visible";
+        }
+        if (state.currentPath === child.path) {
+          subBtn.className += " active";
+        }
+        subBtn.textContent = child.name;
+        subBtn.onclick = function() { navigate(child.path); };
+        nav.appendChild(subBtn);
+      });
+    }
+  });
+}
+
+function renderHomepage() {
+  var content = document.getElementById("content");
+  var existing = content.querySelector(".card");
+  if (existing) {
+    existing.classList.add("fade-out");
+    setTimeout(function() {
+      if (existing.parentNode) existing.parentNode.removeChild(existing);
+      showHomepageCard();
+    }, 300);
+  } else {
+    showHomepageCard();
+  }
+
+  function showHomepageCard() {
+    fetchContent("README").then(function(html) {
+      var card = document.createElement("div");
+      card.className = "card fade-out";
+      card.innerHTML = '<div class="content-body">' + html + '</div>';
+      var graph = document.getElementById("graph-panel");
+      graph.parentNode.insertBefore(card, graph.nextSibling);
+      content.scrollTop = 0;
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.remove("fade-out");
+        });
+      });
+    });
+  }
+}
+
+function renderDocument(path) {
+  var content = document.getElementById("content");
+  var existing = content.querySelector(".card");
+
+  function showCard() {
+    fetchContent(path).then(function(html) {
+      var card = document.createElement("div");
+      card.className = "card fade-out";
+      var meta = "";
+      var node = findNode(path);
+      if (node) {
+        var parts = [];
+        if (node.status) parts.push("status: " + node.status);
+        if (node.tags && node.tags.length > 0) parts.push("tags: " + node.tags.join(", "));
+        if (parts.length > 0) {
+          meta = '<div class="content-meta">' + parts.join(" &middot; ") + '</div>';
+        }
+      }
+      card.innerHTML = meta + '<div class="content-body">' + html + '</div>';
+      var graph = document.getElementById("graph-panel");
+      graph.parentNode.insertBefore(card, graph.nextSibling);
+      content.scrollTop = 0;
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.remove("fade-out");
+        });
+      });
+    });
+  }
+
+  if (existing) {
+    existing.classList.add("fade-out");
+    setTimeout(function() {
+      if (existing.parentNode) existing.parentNode.removeChild(existing);
+      showCard();
+    }, 300);
+  } else {
+    showCard();
+  }
+}
+
+function findNode(path) {
+  if (!state.manifest) return null;
+  for (var i = 0; i < state.manifest.packages.length; i++) {
+    var pkg = state.manifest.packages[i];
+    if (pkg.path === path) return pkg;
+    if (pkg.children) {
+      for (var j = 0; j < pkg.children.length; j++) {
+        if (pkg.children[j].path === path) return pkg.children[j];
+      }
+    }
+  }
+  return null;
+}
+
+function initGraphCanvas() {
+  graphState.canvas = document.getElementById("graph-canvas");
+  graphState.ctx = graphState.canvas.getContext("2d");
+  graphState.dpr = window.devicePixelRatio || 1;
+}
+
+function resizeGraph() {
+  var panel = document.getElementById("graph-panel");
+  var w = panel.clientWidth;
+  var h = panel.clientHeight;
+  graphState.width = w;
+  graphState.height = h;
+  graphState.canvas.width = w * graphState.dpr;
+  graphState.canvas.height = h * graphState.dpr;
+  graphState.ctx.scale(graphState.dpr, graphState.dpr);
+}
+
+function buildGraphData(focusPath) {
+  var nodes = [];
+  var edges = [];
+  if (!state.manifest) return {nodes: nodes, edges: edges};
+
+  var pkgColors = [
+    "#1a6b5a", "#2d8a6e", "#0a5c4a", "#3ba88a",
+    "#1b7a6b", "#0e4d3d", "#4cb89a", "#267d65",
+    "#399078", "#1a8870", "#0d6652", "#2ea585",
+    "#458a7a", "#3c9b88"
+  ];
+
+  if (!focusPath) {
+    var count = state.manifest.packages.length;
+    var cx = graphState.width / 2;
+    var cy = graphState.height / 2;
+    var radius = Math.min(cx, cy) - 30;
+    state.manifest.packages.forEach(function(pkg, i) {
+      var angle = (2 * Math.PI * i / count) - Math.PI / 2;
+      nodes.push({
+        name: pkg.name,
+        path: pkg.path,
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle),
+        vx: 0,
+        vy: 0,
+        radius: 6,
+        color: pkgColors[i % pkgColors.length],
+        fixed: true
+      });
+    });
+  } else {
+    var focusNode = findNode(focusPath);
+    if (!focusNode) return {nodes: nodes, edges: edges};
+
+    var cx = graphState.width / 2;
+    var cy = graphState.height / 2;
+
+    nodes.push({
+      name: focusNode.name,
+      path: focusNode.path,
+      x: cx,
+      y: cy,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      color: "#00e5c3",
+      fixed: true
+    });
+
+    var rels = [];
+    var relTypes = ["builds_on", "constrains", "implements", "related"];
+    relTypes.forEach(function(type) {
+      if (focusNode[type]) {
+        focusNode[type].forEach(function(target) {
+          rels.push({path: target, type: type});
+        });
+      }
+    });
+
+    var ringRadius = Math.min(cx, cy) - 24;
+    var relCount = rels.length;
+    rels.forEach(function(rel, i) {
+      var angle = (2 * Math.PI * i / relCount) - Math.PI / 2;
+      var relName = rel.path.split("/").pop();
+      var relNode = {
+        name: relName,
+        path: rel.path,
+        x: cx + ringRadius * Math.cos(angle),
+        y: cy + ringRadius * Math.sin(angle),
+        vx: 0,
+        vy: 0,
+        radius: 5,
+        color: "#1a6b5a",
+        fixed: true
+      };
+      nodes.push(relNode);
+      edges.push({
+        source: nodes[0],
+        target: relNode,
+        type: rel.type
+      });
+    });
+  }
+
+  return {nodes: nodes, edges: edges};
+}
+
+function drawGraph() {
+  var ctx = graphState.ctx;
+  var w = graphState.width;
+  var h = graphState.height;
+  ctx.clearRect(0, 0, w, h);
+
+  graphState.edges.forEach(function(edge) {
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(26, 107, 90, 0.3)";
+    ctx.lineWidth = 1;
+
+    if (edge.type === "constrains") {
+      ctx.setLineDash([4, 4]);
+    } else if (edge.type === "related") {
+      ctx.setLineDash([2, 2]);
+    } else {
+      ctx.setLineDash([]);
+    }
+
+    ctx.moveTo(edge.source.x, edge.source.y);
+    ctx.lineTo(edge.target.x, edge.target.y);
+    ctx.stroke();
+
+    if (edge.type === "implements") {
+      var dx = edge.target.x - edge.source.x;
+      var dy = edge.target.y - edge.source.y;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        var ux = dx / len;
+        var uy = dy / len;
+        var ax = edge.target.x - ux * edge.target.radius;
+        var ay = edge.target.y - uy * edge.target.radius;
+        var arrowSize = 6;
+        ctx.beginPath();
+        ctx.setLineDash([]);
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - arrowSize * ux + arrowSize * 0.4 * uy, ay - arrowSize * uy - arrowSize * 0.4 * ux);
+        ctx.lineTo(ax - arrowSize * ux - arrowSize * 0.4 * uy, ay - arrowSize * uy + arrowSize * 0.4 * ux);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(26, 107, 90, 0.3)";
+        ctx.fill();
+      }
+    }
+
+    ctx.setLineDash([]);
+  });
+
+  graphState.nodes.forEach(function(node) {
+    var r = node.radius;
+    var color = node.color;
+    if (graphState.hoveredNode === node) {
+      r += 2;
+      color = "#00e5c3";
+    }
+
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    if (graphState.hoveredNode === node) {
+      ctx.strokeStyle = "#00e5c3";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.font = "10px terminus";
+    ctx.fillStyle = "#5A5A5A";
+    ctx.textAlign = "center";
+    ctx.fillText(node.name, node.x, node.y + r + 12);
+  });
+}
+
+function renderGraph(focusPath) {
+  if (!graphState.canvas) initGraphCanvas();
+  resizeGraph();
+  var data = buildGraphData(focusPath);
+  graphState.nodes = data.nodes;
+  graphState.edges = data.edges;
+  drawGraph();
+}
+
+function graphHitTest(x, y) {
+  for (var i = 0; i < graphState.nodes.length; i++) {
+    var node = graphState.nodes[i];
+    var dx = x - node.x;
+    var dy = y - node.y;
+    if (dx * dx + dy * dy <= (node.radius + 4) * (node.radius + 4)) {
+      return node;
+    }
+  }
+  return null;
+}
+
+document.getElementById("graph-canvas").addEventListener("mousemove", function(e) {
+  var rect = graphState.canvas.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+  var hit = graphHitTest(x, y);
+  if (hit !== graphState.hoveredNode) {
+    graphState.hoveredNode = hit;
+    graphState.canvas.style.cursor = hit ? "pointer" : "default";
+    drawGraph();
+  }
+});
+
+document.getElementById("graph-canvas").addEventListener("click", function(e) {
+  var rect = graphState.canvas.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+  var hit = graphHitTest(x, y);
+  if (hit) navigate(hit.path);
+});
+
+function onRouteChange() {
+  var path = getHashPath();
+  state.currentPath = path || null;
+  if (path) {
+    var parts = path.split("/");
+    state.expandedPkg = parts[0];
+  } else {
+    state.expandedPkg = null;
+  }
+  renderNav();
+  if (!path) {
+    renderHomepage();
+    renderGraph(null);
+  } else {
+    renderDocument(path);
+    renderGraph(path);
+  }
+}
+
+window.addEventListener("hashchange", onRouteChange);
+
+fetchManifest().then(function() {
+  onRouteChange();
+});
+</script>
+</body>
+</html>
